@@ -54,6 +54,20 @@ This project builds a machine learning pipeline that classifies Pokémon Natures
 - Acts as a Flask server providing a `/predict` endpoint.
 - Hosts the retro Pokédex UI for interactive predictions.
 
+- ## Requirements
+
+- Python 3.8+
+- pandas
+- scikit-learn
+- flask
+- flask-cors
+
+Install all requirements with:
+
+```bash
+pip install pandas scikit-learn flask flask-cors
+```
+
 ## Installation
 
 ```bash
@@ -62,13 +76,23 @@ pip install flask flask-cors pandas scikit-learn
 
 ## Usage
 
-```bash
-# 1. Start the server
-python pokegpu_app.py
+Bash
+## Navigate to the correct directory folder
+`cd pokegpu`
 
-# 2. Access the UI
-# Open pokedex_ui.html in your browser
-```
+### 1. Fetch entries
+`python get_poke_data.py`
+
+### 2. Label entries
+`python nature_assigner.py`
+
+### 3. Train the engine
+`python train_engine.py`
+
+### 4. Start the server environment
+`python pokegpu_app.py`
+
+Once the backend engine notes it is running successfully, click open `pokedex_ui.html` in your browser to view the interface.
 
 ---
 
