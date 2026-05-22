@@ -26,7 +26,7 @@ This project builds a machine learning pipeline that classifies Pokémon Natures
 
 3. **Model Training** — Run `train_engine.py` to process text via TF-IDF Vectorization and train a Logistic Regression classifier.
 
-4. **Hardware Mapping & Inference** — Launch `pokegpu_app.py` to run the web interface. The system predicts a Pokémon's Nature and triggers a CSA Mapping Modal based on the Pokémon's Type.
+4. **Hardware Mapping & Inference** — Launch `pokegpu_app.py` to run the web interface. 
 
 ## Key Features
 
