@@ -245,6 +245,12 @@ svg.arch { width: 100%; height: auto; display: block; }
 .seen-val { font-size: 7px; color: #1a1a1a; }
 .seen-bar { width: 100%; height: 4px; background: #c8b840; border-radius: 2px; margin-bottom: 6px; overflow: hidden; position: relative; }
 .seen-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
+
+.stat-row { display:flex; align-items:center; gap:4px; }
+.stat-lbl { font-size:5px; color:#9bbc0f; width:34px; flex-shrink:0; }
+.stat-bar-wrap { width:36px; height:5px; background:#0a2010; border-radius:2px; overflow:hidden; flex-shrink:0; }
+.stat-fill { height:100%; width:50%; background:#306230; border-radius:2px; transition:width 0.4s, background 0.4s; }
+.stat-arrow { font-size:8px; width:10px; text-align:center; flex-shrink:0; }
 </style>
 </head>
 <body>
@@ -301,11 +307,25 @@ svg.arch { width: 100%; height: auto; display: block; }
           </div>
         </div>
         <div id="nature-section" style="display:none;">
-          <div class="gpu-panel" id="nature-panel">
-            <div class="gpu-label">&#9654; PREDICTED NATURE (ML MODEL):</div>
-            <div class="gpu-concept" id="nature-name" style="font-size:8px;margin-bottom:4px;"></div>
-            <div class="gpu-concept" id="nature-desc"></div>
-            <div class="gpu-concept" id="nature-confidence" style="margin-top:4px;color:#9bbc0f;"></div>
+          <div style="display:flex;gap:8px;margin-top:8px;align-items:stretch;">
+            <!-- Left: ML Prediction -->
+            <div class="gpu-panel" id="nature-panel" style="flex:1;min-width:0;">
+              <div class="gpu-label">&#9654; PREDICTED NATURE (ML MODEL):</div>
+              <div class="gpu-concept" id="nature-name" style="font-size:8px;margin-bottom:4px;"></div>
+              <div class="gpu-concept" id="nature-desc"></div>
+              <div class="gpu-concept" id="nature-confidence" style="margin-top:4px;color:#9bbc0f;"></div>
+            </div>
+            <!-- Right: Stat change display -->
+            <div id="stat-panel" style="background:#1a3a1a;border:2px solid #306230;border-radius:4px;padding:7px 8px;flex-shrink:0;min-width:110px;">
+              <div style="font-size:5px;color:#9bbc0f;margin-bottom:5px;">&#9654; STAT CHANGES:</div>
+              <div style="display:flex;flex-direction:column;gap:3px;">
+                <div id="stat-atk"  class="stat-row"><span class="stat-lbl">ATK</span><span class="stat-bar-wrap"><span class="stat-fill" id="fill-atk"></span></span><span class="stat-arrow" id="arr-atk"></span></div>
+                <div id="stat-def"  class="stat-row"><span class="stat-lbl">DEF</span><span class="stat-bar-wrap"><span class="stat-fill" id="fill-def"></span></span><span class="stat-arrow" id="arr-def"></span></div>
+                <div id="stat-spa"  class="stat-row"><span class="stat-lbl">SP.ATK</span><span class="stat-bar-wrap"><span class="stat-fill" id="fill-spa"></span></span><span class="stat-arrow" id="arr-spa"></span></div>
+                <div id="stat-spd"  class="stat-row"><span class="stat-lbl">SP.DEF</span><span class="stat-bar-wrap"><span class="stat-fill" id="fill-spd"></span></span><span class="stat-arrow" id="arr-spd"></span></div>
+                <div id="stat-spe"  class="stat-row"><span class="stat-lbl">SPEED</span><span class="stat-bar-wrap"><span class="stat-fill" id="fill-spe"></span></span><span class="stat-arrow" id="arr-spe"></span></div>
+              </div>
+            </div>
           </div>
         </div>
         <div class="controls">
@@ -542,6 +562,61 @@ const TYPE_COLORS = {
   ghost:'#735797',steel:'#b7b7ce',
 };
 
+
+// Nature stat changes: [atk, def, spa, spd, spe] 1=up, -1=down, 0=neutral
+const NATURE_STATS = {
+  Hardy:   [ 0, 0, 0, 0, 0],
+  Lonely:  [ 1, -1, 0, 0, 0],
+  Adamant: [ 1, 0,-1, 0, 0],
+  Naughty: [ 1, 0, 0,-1, 0],
+  Brave:   [ 1, 0, 0, 0,-1],
+  Bold:    [-1, 1, 0, 0, 0],
+  Docile:  [ 0, 0, 0, 0, 0],
+  Impish:  [ 0, 1,-1, 0, 0],
+  Lax:     [ 0, 1, 0,-1, 0],
+  Relaxed: [ 0, 1, 0, 0,-1],
+  Modest:  [-1, 0, 1, 0, 0],
+  Mild:    [ 0,-1, 1, 0, 0],
+  Bashful: [ 0, 0, 0, 0, 0],
+  Rash:    [ 0, 0, 1,-1, 0],
+  Quiet:   [ 0, 0, 1, 0,-1],
+  Calm:    [-1, 0, 0, 1, 0],
+  Gentle:  [ 0,-1, 0, 1, 0],
+  Careful: [ 0, 0,-1, 1, 0],
+  Quirky:  [ 0, 0, 0, 0, 0],
+  Sassy:   [ 0, 0, 0, 1,-1],
+  Timid:   [-1, 0, 0, 0, 1],
+  Hasty:   [ 0,-1, 0, 0, 1],
+  Jolly:   [ 0, 0,-1, 0, 1],
+  Naive:   [ 0, 0, 0,-1, 1],
+  Serious: [ 0, 0, 0, 0, 0],
+};
+
+function updateStatPanel(nature) {
+  const stats = NATURE_STATS[nature] || [0,0,0,0,0];
+  const ids = ['atk','def','spa','spd','spe'];
+  stats.forEach((val, i) => {
+    const fill = document.getElementById('fill-' + ids[i]);
+    const arrow = document.getElementById('arr-' + ids[i]);
+    if (!fill || !arrow) return;
+    if (val === 1) {
+      fill.style.width = '100%';
+      fill.style.background = '#e74c3c';
+      arrow.textContent = '▲';
+      arrow.style.color = '#e74c3c';
+    } else if (val === -1) {
+      fill.style.width = '15%';
+      fill.style.background = '#5dade2';
+      arrow.textContent = '▼';
+      arrow.style.color = '#5dade2';
+    } else {
+      fill.style.width = '50%';
+      fill.style.background = '#306230';
+      arrow.textContent = '—';
+      arrow.style.color = '#555';
+    }
+  });
+}
 const MAX_ID = 386;
 const listNames = {};
 
@@ -728,6 +803,7 @@ async function fetchPokemon(query) {
       if (mlRes.ok) {
         const ml = await mlRes.json();
         document.getElementById('nature-name').textContent = ml.nature.toUpperCase() + ' NATURE';
+        updateStatPanel(ml.nature);
         document.getElementById('nature-desc').textContent = ml.description;
         document.getElementById('nature-confidence').textContent = 'Confidence: ' + ml.confidence + '%';
         document.getElementById('nature-section').style.display = 'block';
