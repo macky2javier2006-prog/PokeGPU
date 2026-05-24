@@ -68,12 +68,6 @@ Install all requirements with:
 pip install pandas scikit-learn flask flask-cors
 ```
 
-## Installation
-
-```bash
-pip install flask flask-cors pandas scikit-learn
-```
-
 ## Usage
 
 Bash
