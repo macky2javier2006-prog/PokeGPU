@@ -91,4 +91,5 @@ Once the backend engine notes it is running successfully, click open `pokedex_ui
 ---
 
 **Developed by:** Javier & Masangcay
+
 **Course:** IT1910 - Computer System Architecture
